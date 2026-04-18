@@ -258,15 +258,39 @@ class Game:
         self.btns      = {}     # 버튼 이름 → pygame.Rect
 
     def _init_fonts(self):
-        fn = "Arial"
+        fn = self._find_korean_font()
         self.fnt = {
             'cd':  pygame.font.SysFont(fn, 110, bold=True),
             'lg':  pygame.font.SysFont(fn,  48, bold=True),
             'md':  pygame.font.SysFont(fn,  32, bold=True),
             'sm':  pygame.font.SysFont(fn,  22, bold=True),
             'xs':  pygame.font.SysFont(fn,  17),
-            'hud': pygame.font.SysFont("Courier New", 20, bold=True),
+            'hud': pygame.font.SysFont(fn,  20, bold=True),
         }
+
+    @staticmethod
+    def _find_korean_font():
+        """한글 지원 시스템 폰트 탐색 (Windows/macOS/Linux)"""
+        candidates = [
+            "malgun gothic",          # Windows 기본 한글 폰트
+            "malgunGothic",
+            "Apple SD Gothic Neo",    # macOS
+            "AppleSDGothicNeo",
+            "AppleGothic",            # macOS (구버전)
+            "NanumGothic",            # 나눔고딕 (설치된 경우)
+            "Nanum Gothic",
+            "nanumgothic",
+            "gulim",                  # Windows 굴림
+            "dotum",                  # Windows 돋움
+            "batang",                 # Windows 바탕
+            "UnDotum",                # Linux
+            "UnBatang",               # Linux
+        ]
+        available = {f.lower().replace(" ", "") for f in pygame.font.get_fonts()}
+        for c in candidates:
+            if c.lower().replace(" ", "") in available:
+                return c
+        return "arial"  # 한글 미지원 fallback
 
     # ── 유틸 ──────────────────────────────────────────────────────────────────
     def _tick_sec(self):
