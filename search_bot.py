@@ -10,7 +10,7 @@ import queue
 import random
 import threading
 import tkinter as tk
-from tkinter import messagebox, scrolledtext
+from tkinter import messagebox, scrolledtext, ttk
 from urllib.parse import quote_plus
 
 from selenium import webdriver
@@ -113,15 +113,6 @@ class SearchBot:
                 self.log("모든 검색이 완료되었습니다.")
 
 
-BG = "#2d2d2d"
-FRAME_BG = "#3a3a3a"
-ENTRY_BG = "#4a4a4a"
-FG = "#e8e8e8"
-ACCENT_GREEN = "#4CAF50"
-ACCENT_RED = "#e53935"
-SEP_COLOR = "#555555"
-
-
 class SearchApp:
     def __init__(self):
         self.root = tk.Tk()
@@ -131,48 +122,40 @@ class SearchApp:
         self._polling = False
         self._build_ui()
 
-    def _section(self, parent, title: str):
-        """섹션 헤더 + 구분선 + 내용 프레임 반환"""
-        outer = tk.Frame(parent, bg=BG)
-        outer.pack(fill="x", padx=12, pady=(8, 2))
-        hdr = tk.Frame(outer, bg=BG)
-        hdr.pack(fill="x")
-        tk.Label(hdr, text=title, bg=BG, fg="#aaaaaa",
-                 font=("", 9, "bold")).pack(side="left")
-        tk.Frame(outer, height=1, bg=SEP_COLOR).pack(fill="x", pady=2)
-        content = tk.Frame(outer, bg=FRAME_BG)
-        content.pack(fill="x")
-        return content
-
     def _build_ui(self):
         self.root.title("네이버/구글 검색 자동화")
-        self.root.geometry("520x620")
+        self.root.geometry("520x580")
         self.root.resizable(False, False)
-        self.root.configure(bg=BG)
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
         # 제목
         tk.Label(self.root, text="네이버 / 구글 검색 자동화",
-                 bg=BG, fg=FG, font=("", 15, "bold")).pack(pady=(16, 4))
+                 font=("", 15, "bold")).pack(pady=(16, 4))
+
+        ttk.Separator(self.root).pack(fill="x", padx=12, pady=4)
 
         # 검색어 섹션
-        kw_content = self._section(self.root, "검색어")
-        self.keyword_entries: list[tk.Entry] = []
+        tk.Label(self.root, text="검색어", font=("", 10, "bold"),
+                 anchor="w").pack(fill="x", padx=16)
+        kw_frame = tk.Frame(self.root)
+        kw_frame.pack(fill="x", padx=16, pady=4)
+
+        self.keyword_entries: list[ttk.Entry] = []
         for i in range(1, 4):
-            row = tk.Frame(kw_content, bg=FRAME_BG)
-            row.pack(fill="x", padx=10, pady=4)
-            tk.Label(row, text=f"검색어 {i}:", width=8, anchor="w",
-                     bg=FRAME_BG, fg=FG).pack(side="left")
-            entry = tk.Entry(row, width=38, bg=ENTRY_BG, fg=FG,
-                             insertbackground=FG, relief="flat",
-                             font=("", 11))
-            entry.pack(side="left", padx=4, ipady=4)
+            row = tk.Frame(kw_frame)
+            row.pack(fill="x", pady=3)
+            tk.Label(row, text=f"검색어 {i}:", width=8, anchor="w").pack(side="left")
+            entry = ttk.Entry(row, width=38, font=("", 11))
+            entry.pack(side="left", padx=4, ipady=2)
             self.keyword_entries.append(entry)
 
+        ttk.Separator(self.root).pack(fill="x", padx=12, pady=8)
+
         # 실행 시간 섹션
-        time_content = self._section(self.root, "실행 시간")
-        time_row = tk.Frame(time_content, bg=FRAME_BG)
-        time_row.pack(padx=10, pady=8)
+        tk.Label(self.root, text="실행 시간", font=("", 10, "bold"),
+                 anchor="w").pack(fill="x", padx=16)
+        time_row = tk.Frame(self.root)
+        time_row.pack(padx=16, pady=6)
 
         now = datetime.datetime.now()
         self.hour_var = tk.StringVar(value=str(now.hour))
@@ -182,51 +165,47 @@ class SearchApp:
         hours = [str(h) for h in range(24)]
         minutes = [str(m) for m in range(0, 60, 5)]
 
-        tk.Label(time_row, text="시각:", bg=FRAME_BG, fg=FG).pack(side="left")
-        om_h = tk.OptionMenu(time_row, self.hour_var, *hours)
-        om_h.config(bg=ENTRY_BG, fg=FG, activebackground="#555", activeforeground=FG,
-                    highlightthickness=0, relief="flat", width=4)
-        om_h["menu"].config(bg=ENTRY_BG, fg=FG)
-        om_h.pack(side="left", padx=6)
-        tk.Label(time_row, text="시", bg=FRAME_BG, fg=FG).pack(side="left")
-        om_m = tk.OptionMenu(time_row, self.minute_var, *minutes)
-        om_m.config(bg=ENTRY_BG, fg=FG, activebackground="#555", activeforeground=FG,
-                    highlightthickness=0, relief="flat", width=4)
-        om_m["menu"].config(bg=ENTRY_BG, fg=FG)
-        om_m.pack(side="left", padx=6)
-        tk.Label(time_row, text="분", bg=FRAME_BG, fg=FG).pack(side="left")
+        tk.Label(time_row, text="시각:").pack(side="left")
+        hour_cb = ttk.Combobox(time_row, textvariable=self.hour_var,
+                               values=hours, state="readonly", width=5)
+        hour_cb.pack(side="left", padx=6)
+        tk.Label(time_row, text="시").pack(side="left")
+        min_cb = ttk.Combobox(time_row, textvariable=self.minute_var,
+                              values=minutes, state="readonly", width=5)
+        min_cb.pack(side="left", padx=6)
+        tk.Label(time_row, text="분").pack(side="left")
+
+        ttk.Separator(self.root).pack(fill="x", padx=12, pady=8)
 
         # 버튼
-        btn_frame = tk.Frame(self.root, bg=BG)
-        btn_frame.pack(pady=12)
+        btn_frame = tk.Frame(self.root)
+        btn_frame.pack(pady=4)
 
         self.start_btn = tk.Button(btn_frame, text="  시  작  ", width=10,
-                                   bg=ACCENT_GREEN, fg="white",
+                                   bg="#4CAF50", fg="white",
                                    activebackground="#388E3C", activeforeground="white",
                                    font=("", 11, "bold"), relief="flat",
                                    command=self._on_start)
         self.start_btn.pack(side="left", padx=16)
 
         self.stop_btn = tk.Button(btn_frame, text="  중  지  ", width=10,
-                                  bg=ACCENT_RED, fg="white",
+                                  bg="#e53935", fg="white",
                                   activebackground="#b71c1c", activeforeground="white",
                                   font=("", 11, "bold"), relief="flat",
                                   state="disabled",
                                   command=self._on_stop)
         self.stop_btn.pack(side="left", padx=16)
 
-        # 로그 섹션
-        log_content = self._section(self.root, "로그")
-        log_content.pack_configure(pady=(0, 0))
-        outer_log = tk.Frame(self.root, bg=BG)
-        outer_log.pack(fill="both", expand=True, padx=12, pady=(0, 12))
+        ttk.Separator(self.root).pack(fill="x", padx=12, pady=8)
 
+        # 로그
+        tk.Label(self.root, text="로그", font=("", 10, "bold"),
+                 anchor="w").pack(fill="x", padx=16)
         self.log_text = scrolledtext.ScrolledText(
-            outer_log, state="disabled", wrap="word",
-            bg="#1e1e1e", fg="#cccccc", insertbackground=FG,
-            font=("Courier", 10), height=14, relief="flat"
+            self.root, state="disabled", wrap="word",
+            font=("Courier", 10), height=12, relief="flat"
         )
-        self.log_text.pack(fill="both", expand=True)
+        self.log_text.pack(fill="both", expand=True, padx=12, pady=(4, 12))
 
     def _get_keywords(self) -> list[str]:
         result = []
