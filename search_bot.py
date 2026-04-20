@@ -176,10 +176,11 @@ class SearchApp:
 
         now = datetime.datetime.now()
         self.hour_var = tk.StringVar(value=str(now.hour))
-        self.minute_var = tk.StringVar(value=str(now.minute))
+        default_m = (now.minute // 5) * 5
+        self.minute_var = tk.StringVar(value=str(default_m))
 
         hours = [str(h) for h in range(24)]
-        minutes = [str(m) for m in range(60)]
+        minutes = [str(m) for m in range(0, 60, 5)]
 
         tk.Label(time_row, text="시각:", bg=FRAME_BG, fg=FG).pack(side="left")
         om_h = tk.OptionMenu(time_row, self.hour_var, *hours)
