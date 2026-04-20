@@ -5,7 +5,6 @@
   python3 search_bot.py
 """
 
-import os
 import warnings
 warnings.filterwarnings('ignore', message='urllib3 v2 only supports OpenSSL')
 
@@ -176,7 +175,7 @@ class SearchApp(QMainWindow):
 
         # 제목
         title = QLabel("네이버 / 구글 검색 자동화")
-        title.setFont(QFont("Apple SD Gothic Neo", 17, QFont.Weight.Bold))
+        title.setFont(QFont("Apple SD Gothic Neo, Malgun Gothic", 17, QFont.Weight.Bold))
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         root.addWidget(title)
         root.addWidget(self._sep())
@@ -246,13 +245,13 @@ class SearchApp(QMainWindow):
 
     def _hdr(self, text: str) -> QLabel:
         lbl = QLabel(text)
-        lbl.setFont(QFont("Apple SD Gothic Neo", 11, QFont.Weight.Bold))
+        lbl.setFont(QFont("Apple SD Gothic Neo, Malgun Gothic", 11, QFont.Weight.Bold))
         return lbl
 
     def _btn(self, text: str, color: str, hover: str) -> QPushButton:
         btn = QPushButton(text)
         btn.setFixedSize(130, 40)
-        btn.setFont(QFont("Apple SD Gothic Neo", 13, QFont.Weight.Bold))
+        btn.setFont(QFont("Apple SD Gothic Neo, Malgun Gothic", 13, QFont.Weight.Bold))
         btn.setStyleSheet(
             f"QPushButton {{ background-color:{color}; color:white; border-radius:8px; }}"
             f"QPushButton:hover {{ background-color:{hover}; }}"
