@@ -282,6 +282,7 @@ class SearchApp:
         self.stop_btn.config(state="disabled")
 
     def _on_close(self):
+        self._polling = False
         self.stop_event.set()
         self.root.destroy()
 
@@ -316,8 +317,14 @@ class SearchApp:
                 self.log_text.config(state="disabled")
         except queue.Empty:
             pass
+        except Exception:
+            self._polling = False
+            return
         if self._polling:
-            self.root.after(100, self._poll_queue)
+            try:
+                self.root.after(100, self._poll_queue)
+            except Exception:
+                self._polling = False
 
     def run(self):
         self.root.update()
