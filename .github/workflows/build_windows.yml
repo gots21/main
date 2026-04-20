@@ -5,6 +5,9 @@ on:
     branches: [ "claude/search-automation-app-qEyof" ]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build-windows:
     runs-on: windows-latest
