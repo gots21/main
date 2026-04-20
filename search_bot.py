@@ -1,7 +1,7 @@
 """
 네이버/구글 검색 자동화 앱
 사용법:
-  pip3 install selenium webdriver-manager
+  pip3 install selenium webdriver-manager customtkinter
   python3 search_bot.py
 """
 
@@ -15,12 +15,16 @@ import queue
 import random
 import threading
 import tkinter as tk
-from tkinter import messagebox, scrolledtext, ttk
+from tkinter import messagebox
 from urllib.parse import quote_plus
 
+import customtkinter as ctk
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+
+ctk.set_appearance_mode("System")
+ctk.set_default_color_theme("blue")
 
 NAVER_URL = "https://search.naver.com/search.naver?query={}"
 GOOGLE_URL = "https://www.google.com/search?q={}"
@@ -54,10 +58,9 @@ class SearchBot:
         return driver
 
     def _random_delay(self, min_s: float, max_s: float):
-        deadline = datetime.datetime.now() + datetime.timedelta(seconds=max_s)
-        interval = 0.2
         elapsed = 0.0
         target = random.uniform(min_s, max_s)
+        interval = 0.2
         while elapsed < target:
             if self.stop_event.is_set():
                 return
@@ -78,7 +81,7 @@ class SearchBot:
                 self.log(f"[오류] {site_name} | {keyword} | {i}/{SEARCH_COUNT}: {e}")
             self.log(f"{site_name} | {keyword} | {i}/{SEARCH_COUNT} 완료")
             if i % 10 == 0 and i < SEARCH_COUNT:
-                self.log(f"  → 10회 단위 추가 대기 중...")
+                self.log("  → 10회 단위 추가 대기 중...")
                 self._random_delay(15.0, 30.0)
             else:
                 self._random_delay(3.0, 7.0)
@@ -95,7 +98,7 @@ class SearchBot:
                 self._search_site(driver, NAVER_URL, keyword, "네이버")
                 if self.stop_event.is_set():
                     break
-                self.log(f"  → 사이트 전환 대기 중...")
+                self.log("  → 사이트 전환 대기 중...")
                 self._random_delay(10.0, 20.0)
                 if self.stop_event.is_set():
                     break
@@ -120,7 +123,7 @@ class SearchBot:
 
 class SearchApp:
     def __init__(self):
-        self.root = tk.Tk()
+        self.root = ctk.CTk()
         self.stop_event = threading.Event()
         self.worker_thread: threading.Thread | None = None
         self.log_queue: queue.Queue[str] = queue.Queue()
@@ -129,38 +132,45 @@ class SearchApp:
 
     def _build_ui(self):
         self.root.title("네이버/구글 검색 자동화")
-        self.root.geometry("520x580")
+        self.root.geometry("520x600")
         self.root.resizable(False, False)
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
+        bold16 = ctk.CTkFont(size=16, weight="bold")
+        bold12 = ctk.CTkFont(size=12, weight="bold")
+
         # 제목
-        tk.Label(self.root, text="네이버 / 구글 검색 자동화",
-                 font=("", 15, "bold")).pack(pady=(16, 4))
+        ctk.CTkLabel(self.root, text="네이버 / 구글 검색 자동화",
+                     font=bold16).pack(pady=(18, 6))
 
-        ttk.Separator(self.root).pack(fill="x", padx=12, pady=4)
+        # 검색어 프레임
+        kw_frame = ctk.CTkFrame(self.root)
+        kw_frame.pack(fill="x", padx=16, pady=6)
+        ctk.CTkLabel(kw_frame, text="검색어", font=bold12,
+                     anchor="w").pack(fill="x", padx=14, pady=(10, 4))
 
-        # 검색어 섹션
-        tk.Label(self.root, text="검색어", font=("", 10, "bold"),
-                 anchor="w").pack(fill="x", padx=16)
-        kw_frame = tk.Frame(self.root)
-        kw_frame.pack(fill="x", padx=16, pady=4)
-
-        self.keyword_entries: list[ttk.Entry] = []
+        self.keyword_entries: list[ctk.CTkEntry] = []
         for i in range(1, 4):
-            row = tk.Frame(kw_frame)
-            row.pack(fill="x", pady=3)
-            tk.Label(row, text=f"검색어 {i}:", width=8, anchor="w").pack(side="left")
-            entry = ttk.Entry(row, width=38, font=("", 11))
-            entry.pack(side="left", padx=4, ipady=2)
+            row = ctk.CTkFrame(kw_frame, fg_color="transparent")
+            row.pack(fill="x", padx=14, pady=3)
+            ctk.CTkLabel(row, text=f"검색어 {i}:", width=70,
+                         anchor="w").pack(side="left")
+            entry = ctk.CTkEntry(row, width=340,
+                                 placeholder_text=f"검색어 {i} 입력",
+                                 font=ctk.CTkFont(size=13))
+            entry.pack(side="left", padx=6)
             self.keyword_entries.append(entry)
 
-        ttk.Separator(self.root).pack(fill="x", padx=12, pady=8)
+        ctk.CTkLabel(kw_frame, text="").pack(pady=2)
 
-        # 실행 시간 섹션
-        tk.Label(self.root, text="실행 시간", font=("", 10, "bold"),
-                 anchor="w").pack(fill="x", padx=16)
-        time_row = tk.Frame(self.root)
-        time_row.pack(padx=16, pady=6)
+        # 실행 시간 프레임
+        time_frame = ctk.CTkFrame(self.root)
+        time_frame.pack(fill="x", padx=16, pady=6)
+        ctk.CTkLabel(time_frame, text="실행 시간", font=bold12,
+                     anchor="w").pack(fill="x", padx=14, pady=(10, 4))
+
+        time_row = ctk.CTkFrame(time_frame, fg_color="transparent")
+        time_row.pack(padx=14, pady=(0, 10))
 
         now = datetime.datetime.now()
         self.hour_var = tk.StringVar(value=str(now.hour))
@@ -170,47 +180,41 @@ class SearchApp:
         hours = [str(h) for h in range(24)]
         minutes = [str(m) for m in range(0, 60, 5)]
 
-        tk.Label(time_row, text="시각:").pack(side="left")
-        hour_cb = ttk.Combobox(time_row, textvariable=self.hour_var,
-                               values=hours, state="readonly", width=5)
-        hour_cb.pack(side="left", padx=6)
-        tk.Label(time_row, text="시").pack(side="left")
-        min_cb = ttk.Combobox(time_row, textvariable=self.minute_var,
-                              values=minutes, state="readonly", width=5)
-        min_cb.pack(side="left", padx=6)
-        tk.Label(time_row, text="분").pack(side="left")
-
-        ttk.Separator(self.root).pack(fill="x", padx=12, pady=8)
+        ctk.CTkLabel(time_row, text="시각:").pack(side="left")
+        ctk.CTkOptionMenu(time_row, variable=self.hour_var,
+                          values=hours, width=80).pack(side="left", padx=6)
+        ctk.CTkLabel(time_row, text="시").pack(side="left")
+        ctk.CTkOptionMenu(time_row, variable=self.minute_var,
+                          values=minutes, width=80).pack(side="left", padx=6)
+        ctk.CTkLabel(time_row, text="분").pack(side="left")
 
         # 버튼
-        btn_frame = tk.Frame(self.root)
-        btn_frame.pack(pady=4)
+        btn_frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        btn_frame.pack(pady=10)
 
-        self.start_btn = tk.Button(btn_frame, text="  시  작  ", width=10,
-                                   bg="#4CAF50", fg="white",
-                                   activebackground="#388E3C", activeforeground="white",
-                                   font=("", 11, "bold"), relief="flat",
-                                   command=self._on_start)
+        self.start_btn = ctk.CTkButton(
+            btn_frame, text="시  작", width=130,
+            fg_color="#4CAF50", hover_color="#388E3C",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            command=self._on_start)
         self.start_btn.pack(side="left", padx=16)
 
-        self.stop_btn = tk.Button(btn_frame, text="  중  지  ", width=10,
-                                  bg="#e53935", fg="white",
-                                  activebackground="#b71c1c", activeforeground="white",
-                                  font=("", 11, "bold"), relief="flat",
-                                  state="disabled",
-                                  command=self._on_stop)
+        self.stop_btn = ctk.CTkButton(
+            btn_frame, text="중  지", width=130,
+            fg_color="#e53935", hover_color="#b71c1c",
+            font=ctk.CTkFont(size=13, weight="bold"),
+            state="disabled",
+            command=self._on_stop)
         self.stop_btn.pack(side="left", padx=16)
 
-        ttk.Separator(self.root).pack(fill="x", padx=12, pady=8)
-
         # 로그
-        tk.Label(self.root, text="로그", font=("", 10, "bold"),
-                 anchor="w").pack(fill="x", padx=16)
-        self.log_text = scrolledtext.ScrolledText(
-            self.root, state="disabled", wrap="word",
-            font=("Courier", 10), height=12, relief="flat"
-        )
-        self.log_text.pack(fill="both", expand=True, padx=12, pady=(4, 12))
+        ctk.CTkLabel(self.root, text="로그", font=bold12,
+                     anchor="w").pack(fill="x", padx=20, pady=(4, 2))
+        self.log_text = ctk.CTkTextbox(
+            self.root, wrap="word",
+            font=ctk.CTkFont(family="Courier", size=11),
+            state="disabled", height=180)
+        self.log_text.pack(fill="both", expand=True, padx=16, pady=(0, 16))
 
     def _get_keywords(self) -> list[str]:
         result = []
@@ -238,13 +242,13 @@ class SearchApp:
         self.stop_event = threading.Event()
         target_dt = self._get_schedule_dt()
 
-        self.start_btn.config(state="disabled")
-        self.stop_btn.config(state="normal")
+        self.start_btn.configure(state="disabled")
+        self.stop_btn.configure(state="normal")
 
-        self._log(f"{'='*40}")
+        self._log("=" * 38)
         self._log(f"검색어: {', '.join(keywords)}")
         self._log(f"실행 예정: {target_dt.strftime('%Y-%m-%d %H:%M:00')}")
-        self._log(f"{'='*40}")
+        self._log("=" * 38)
 
         self.worker_thread = threading.Thread(
             target=self._worker,
@@ -259,7 +263,7 @@ class SearchApp:
     def _on_stop(self):
         self.stop_event.set()
         self._log("중지 신호를 보냈습니다...")
-        self.stop_btn.config(state="disabled")
+        self.stop_btn.configure(state="disabled")
 
     def _on_close(self):
         self.stop_event.set()
@@ -290,14 +294,14 @@ class SearchApp:
             while True:
                 msg = self.log_queue.get_nowait()
                 if msg == "__DONE__":
-                    self.start_btn.config(state="normal")
-                    self.stop_btn.config(state="disabled")
+                    self.start_btn.configure(state="normal")
+                    self.stop_btn.configure(state="disabled")
                     self._polling = False
                     return
-                self.log_text.config(state="normal")
+                self.log_text.configure(state="normal")
                 self.log_text.insert("end", msg + "\n")
                 self.log_text.see("end")
-                self.log_text.config(state="disabled")
+                self.log_text.configure(state="disabled")
         except queue.Empty:
             pass
 
