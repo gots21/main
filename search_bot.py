@@ -21,7 +21,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QComboBox,
     QPushButton, QTextEdit, QFrame,
-    QMessageBox,
+    QMessageBox, QCheckBox,
 )
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -218,6 +218,9 @@ class SearchApp(QMainWindow):
         time_row.addStretch()
         root.addLayout(time_row)
 
+        self.daily_check = QCheckBox("매일 자동실행")
+        root.addWidget(self.daily_check)
+
         root.addWidget(self._sep())
 
         # 버튼
@@ -304,6 +307,10 @@ class SearchApp(QMainWindow):
     def _on_done(self):
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
+        if self.daily_check.isChecked() and not self.stop_event.is_set():
+            ts = datetime.datetime.now().strftime("%H:%M:%S")
+            self.log_text.append(f"[{ts}] 내일 같은 시간에 자동 재실행 예약 중...")
+            self._on_start()
 
     def closeEvent(self, event):
         self.stop_event.set()
