@@ -1,4 +1,4 @@
-name: Build Windows EXE
+name: Build
 
 on:
   push:
@@ -6,9 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -18,16 +17,37 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: |
-          pip install selenium webdriver-manager PyQt6 pyinstaller
+        run: pip install selenium webdriver-manager PyQt6 pyinstaller
 
       - name: Build EXE
-        run: |
-          pyinstaller --onefile --windowed --name "search_bot" search_bot.py
+        run: pyinstaller --onefile --windowed --name "search_bot" search_bot.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: search_bot_windows
           path: dist/search_bot.exe
+          retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install selenium webdriver-manager PyQt6 pyinstaller
+
+      - name: Build APP
+        run: pyinstaller --onefile --windowed --name "search_bot" search_bot.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: search_bot_macos
+          path: dist/search_bot
           retention-days: 30
