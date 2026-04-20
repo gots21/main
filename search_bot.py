@@ -5,6 +5,11 @@
   python3 search_bot.py
 """
 
+import os
+import warnings
+os.environ['TK_SILENCE_DEPRECATION'] = '1'
+warnings.filterwarnings('ignore', message='urllib3 v2 only supports OpenSSL')
+
 import datetime
 import queue
 import random
